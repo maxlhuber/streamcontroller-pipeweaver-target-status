@@ -1,0 +1,19 @@
+{
+  "version": "0.1.1",
+  "id": "com_hubelix_PipeWeaverTargetStatus",
+  "name": "PipeWeaver Target Status",
+  "thumbnail": "store/thumbnail.png",
+  "app-version": "1.5.0-beta.12",
+  "author": "Hubi",
+  "github": "https://github.com/maxlhuber/streamcontroller-pipeweaver-target-status",
+  "descriptions": {
+    "en_US": "Toggle PipeWeaver Master Channel output and show a dynamic icon for the active target",
+    "de_DE": "Schaltet den PipeWeaver Master Channel um und zeigt ein dynamisches Icon für das aktive Ziel"
+  },
+  "short-descriptions": {
+    "en_US": "Dynamic PipeWeaver target toggle",
+    "de_DE": "Dynamischer PipeWeaver-Target-Toggle"
+  },
+  "minimum-app-version": "1.5.0-beta.12",
+  "license": "MIT"
+}
