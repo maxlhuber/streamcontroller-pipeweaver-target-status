@@ -80,6 +80,15 @@ Possible future improvements:
 - configurable labels/icons
 - packaged release artifacts for easier install/update
 
+## Development
+
+Useful files in this repository:
+
+- `actions/TargetToggleAction/TargetToggleAction.py` - main plugin logic
+- `manifest.json` - plugin metadata
+- `main.py` - StreamController plugin registration
+- `CHANGELOG.md` - release history
+
 ## License
 
 MIT
