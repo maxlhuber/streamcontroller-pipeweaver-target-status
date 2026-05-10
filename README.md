@@ -32,10 +32,10 @@ That makes it more robust on setups where the `pipeweaver-client` CLI status/edi
 
 ### Manual
 
-Copy this plugin directory into your StreamController plugins directory:
+Copy this repository's plugin directory to your StreamController plugins directory:
 
 ```bash
-~/.var/app/com.core447.StreamController/data/plugins/com_hubelix_PipeWeaverTargetStatus
+cp -a ./ ~/.var/app/com.core447.StreamController/data/plugins/com_hubelix_PipeWeaverTargetStatus
 ```
 
 Then restart StreamController.
@@ -71,6 +71,14 @@ On press, the plugin:
 - The plugin is focused on a simple 2-target toggle workflow.
 - It avoids hard dependency on fixed PipeWire node IDs.
 - It is currently tailored for local PipeWeaver access, not remote API access.
+
+## Roadmap
+
+Possible future improvements:
+
+- better multi-output handling
+- configurable labels/icons
+- packaged release artifacts for easier install/update
 
 ## License
 
