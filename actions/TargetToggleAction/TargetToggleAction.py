@@ -247,15 +247,16 @@ class TargetToggleAction(ActionBase):
             return
 
         self.current_target_name = current
+        settings = self._settings()
         speaker_name = speaker.get("name") or speaker.get("description") or "speaker"
         headphone_name = headphone.get("name") or headphone.get("description") or "headphones"
 
-        if current == headphone.get("name") or current == headphone.get("description"):
+        if self._match_text(current, settings.get("headphone_name", "")):
             icon = os.path.join(self.plugin_base.PATH, "assets", "icons", "headphones.svg")
             top = "Audio"
             center = ""
             bottom = "Headphones"
-        elif current == speaker.get("name") or current == speaker.get("description"):
+        elif self._match_text(current, settings.get("speaker_name", "")):
             icon = os.path.join(self.plugin_base.PATH, "assets", "icons", "speaker.svg")
             top = "Audio"
             center = ""
