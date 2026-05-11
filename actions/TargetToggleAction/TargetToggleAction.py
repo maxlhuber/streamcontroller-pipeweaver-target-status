@@ -314,22 +314,21 @@ class TargetToggleAction(ActionBase):
         return None
 
     def _show_error(self, error):
-        message = str(error)
-        self.last_error = message
-        self.set_media(media_path=os.path.join(self.plugin_base.PATH, "assets", "icons", "unknown.svg"), size=0.82)
-        self.set_top_label("Audio")
-        self.set_center_label("ERR")
-        self.set_bottom_label(message[:18])
+        self.last_error = str(error)
+        self.set_media(media_path=os.path.join(self.plugin_base.PATH, "assets", "icons", "unknown.svg"), size=0.75)
+        self.set_top_label("")
+        self.set_center_label("")
+        self.set_bottom_label("")
 
     def _is_configured(self) -> bool:
         s = self._settings()
         return bool(s.get("master_name") and s.get("speaker_name") and s.get("headphone_name"))
 
     def _show_not_configured(self):
-        self.set_media(media_path=os.path.join(self.plugin_base.PATH, "assets", "icons", "unknown.svg"), size=0.82)
-        self.set_top_label("Audio")
-        self.set_center_label("—")
-        self.set_bottom_label("Configure")
+        self.set_media(media_path=os.path.join(self.plugin_base.PATH, "assets", "icons", "unknown.svg"), size=0.75)
+        self.set_top_label("")
+        self.set_center_label("")
+        self.set_bottom_label("")
 
     def refresh_state(self, force: bool = False):
         if not self._is_configured():
@@ -354,27 +353,18 @@ class TargetToggleAction(ActionBase):
 
         if self._match_text(current, settings.get("headphone_name", "")):
             icon = os.path.join(self.plugin_base.PATH, "assets", "icons", "headphones.svg")
-            top = "Audio"
-            center = ""
-            bottom = "Headphones"
         elif self._match_text(current, settings.get("speaker_name", "")):
             icon = os.path.join(self.plugin_base.PATH, "assets", "icons", "speaker.svg")
-            top = "Audio"
-            center = ""
-            bottom = "Speaker"
         else:
             icon = os.path.join(self.plugin_base.PATH, "assets", "icons", "unknown.svg")
-            top = "Audio"
-            center = "?"
-            bottom = (current or f"{speaker_name}/{headphone_name}")[:18]
 
         if force or icon != self.current_icon:
-            self.set_media(media_path=icon, size=0.82)
+            self.set_media(media_path=icon, size=0.75)
             self.current_icon = icon
 
-        self.set_top_label(top)
-        self.set_center_label(center)
-        self.set_bottom_label(bottom)
+        self.set_top_label("")
+        self.set_center_label("")
+        self.set_bottom_label("")
 
     def toggle_target(self):
         if not self._is_configured():
