@@ -220,7 +220,20 @@ class TargetToggleAction(ActionBase):
         self.set_center_label("ERR")
         self.set_bottom_label(message[:18])
 
+    def _is_configured(self) -> bool:
+        s = self._settings()
+        return bool(s.get("master_name") and s.get("speaker_name") and s.get("headphone_name"))
+
+    def _show_not_configured(self):
+        self.set_media(media_path=os.path.join(self.plugin_base.PATH, "assets", "icons", "unknown.svg"), size=0.82)
+        self.set_top_label("Audio")
+        self.set_center_label("—")
+        self.set_bottom_label("Configure")
+
     def refresh_state(self, force: bool = False):
+        if not self._is_configured():
+            self._show_not_configured()
+            return
         try:
             data = self._get_status_data()
             master = self._master_profile_device(data)
@@ -262,6 +275,8 @@ class TargetToggleAction(ActionBase):
         self.set_bottom_label(bottom)
 
     def toggle_target(self):
+        if not self._is_configured():
+            raise RuntimeError("Plugin not configured — set master, speaker and headphone names first.")
         data = self._get_status_data()
         master = self._master_profile_device(data)
         speaker, headphone = self._resolve_toggle_targets(data)
