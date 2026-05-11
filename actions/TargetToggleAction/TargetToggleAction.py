@@ -84,7 +84,7 @@ class TargetToggleAction(ActionBase):
 
     def _init_settings(self):
         """Write default values once at startup; never called on every tick."""
-        settings = self.get_settings()
+        settings = self.get_settings() or {}
         changed = False
         for key, default in [
             ("master_name", ""),
@@ -97,8 +97,8 @@ class TargetToggleAction(ActionBase):
         if changed:
             self.set_settings(settings)
 
-    def _settings(self):
-        return self.get_settings()
+    def _settings(self) -> dict:
+        return self.get_settings() or {}
 
     def _http_get_json(self, urls):
         last_error = None
