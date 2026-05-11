@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning as far as practical for a small plugin.
 
+## [0.2.1] - 2026-05-11
+
+### Added
+- Config panel now shows live dropdowns for all three fields (PipeWeaver
+  target name, speaker device, headphone device), populated from the
+  PipeWeaver API when the panel is opened. Falls back to free-text entry
+  if PipeWeaver is unreachable.
+- First available option is auto-saved when a field has never been
+  configured, so the button becomes active immediately after opening the
+  config for the first time.
+
+### Fixed
+- Config panel failed to open: `Adw.EntryRow` does not have `set_subtitle()`
+  (only `Adw.ActionRow` does). Replaced with `set_tooltip_text()`.
+- `get_settings()` can return `None` for a freshly placed action;
+  `_settings()` and `_save_setting()` now guard with `or {}`.
+
+### Changed
+- Button shows icon only — all top/center/bottom labels removed.
+- Icon fill size adjusted to 0.75 for better visual fit without labels.
+
 ## [0.2.0] - 2026-05-11
 
 ### Fixed
