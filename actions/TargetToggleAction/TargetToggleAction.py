@@ -87,9 +87,12 @@ class TargetToggleAction(ActionBase):
 
         # ── PipeWeaver target name ──────────────────────────────────────────
         if target_names:
-            # Ensure current saved value appears in the list even if API no longer returns it
             if current_master and current_master not in target_names:
                 target_names.insert(0, current_master)
+            elif not current_master:
+                # Nothing saved yet — auto-save the first available option
+                current_master = target_names[0]
+                self._save_setting("master_name", current_master)
             master_row = Adw.ComboRow(title="PipeWeaver target name")
             master_row.set_tooltip_text("The managed PipeWeaver target (master channel)")
             master_row.set_model(self._make_string_list(target_names))
@@ -106,7 +109,10 @@ class TargetToggleAction(ActionBase):
             if current_speaker and current_speaker not in device_names:
                 device_names_speaker = [current_speaker] + device_names
             else:
-                device_names_speaker = device_names
+                device_names_speaker = list(device_names)
+            if not current_speaker:
+                current_speaker = device_names_speaker[0]
+                self._save_setting("speaker_name", current_speaker)
             speaker_row = Adw.ComboRow(title="Speaker device")
             speaker_row.set_tooltip_text("Node name of the speaker output")
             speaker_row.set_model(self._make_string_list(device_names_speaker))
@@ -123,7 +129,10 @@ class TargetToggleAction(ActionBase):
             if current_headphone and current_headphone not in device_names:
                 device_names_headphone = [current_headphone] + device_names
             else:
-                device_names_headphone = device_names
+                device_names_headphone = list(device_names)
+            if not current_headphone:
+                current_headphone = device_names_headphone[0]
+                self._save_setting("headphone_name", current_headphone)
             headphone_row = Adw.ComboRow(title="Headphone device")
             headphone_row.set_tooltip_text("Node name of the headphone/headset output")
             headphone_row.set_model(self._make_string_list(device_names_headphone))
@@ -170,7 +179,7 @@ class TargetToggleAction(ActionBase):
         self.refresh_state(force=True)
 
     def _save_setting(self, key, value):
-        settings = self.get_settings()
+        settings = self.get_settings() or {}
         settings[key] = value
         self.set_settings(settings)
 
