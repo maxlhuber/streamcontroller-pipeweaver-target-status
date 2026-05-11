@@ -183,9 +183,8 @@ class TargetToggleAction(ActionBase):
             raise RuntimeError(f"Headphone target not found: {settings['headphone_name']}")
         return speaker, headphone
 
-    def get_current_target(self) -> Optional[str]:
-        data = self._get_status_data()
-        master = self._master_profile_device(data)
+    def _get_current_target(self, data, master) -> Optional[str]:
+        """Return the name of the currently active target using pre-fetched API data."""
         attached = master.get("attached_devices") or []
         if attached:
             return attached[0].get("name") or attached[0].get("description")
@@ -195,7 +194,7 @@ class TargetToggleAction(ActionBase):
         if default_target_id is None:
             return None
 
-        for dev in data["audio"]["devices"]["Target"]:
+        for dev in data["audio"].get("devices", {}).get("Target", []):
             if dev.get("node_id") == default_target_id:
                 return dev.get("name") or dev.get("description")
         return None
@@ -211,7 +210,8 @@ class TargetToggleAction(ActionBase):
     def refresh_state(self, force: bool = False):
         try:
             data = self._get_status_data()
-            current = self.get_current_target()
+            master = self._master_profile_device(data)
+            current = self._get_current_target(data, master)
             speaker, headphone = self._resolve_toggle_targets(data)
         except Exception as e:
             self._show_error(e)
@@ -256,7 +256,7 @@ class TargetToggleAction(ActionBase):
         if not master_id:
             raise RuntimeError("Master target has no ID")
 
-        current = self.get_current_target()
+        current = self._get_current_target(data, master)
         next_target = speaker if current == (headphone.get("name") or headphone.get("description")) else headphone
         next_target_id = next_target.get("node_id")
         if next_target_id is None:
