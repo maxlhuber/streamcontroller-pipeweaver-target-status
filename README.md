@@ -40,21 +40,31 @@ cp -a ./ ~/.var/app/com.core447.StreamController/data/plugins/com_hubelix_PipeWe
 
 Then restart StreamController.
 
+### From a release ZIP
+
+Download the latest ZIP from the [Releases](https://github.com/maxlhuber/streamcontroller-pipeweaver-target-status/releases) page and extract it into:
+
+```
+~/.var/app/com.core447.StreamController/data/plugins/com_hubelix_PipeWeaverTargetStatus/
+```
+
+Then restart StreamController.
+
 ## Configuration
 
-The action exposes these settings:
+Open the action config panel by clicking on the action in StreamController. All three fields are **live dropdowns** populated from the PipeWeaver API:
 
-- **PipeWeaver target name**
-  - Usually something like `Master Channel`
-- **Speaker device match**
-  - Usually a PipeWire node name like `alsa_output.usb-bestechnic_EDIFIER_M60_20160406.1-00.analog-stereo`
-- **Headphone device match**
-  - Usually a PipeWire node name like `xlrdock-sink`
+| Field | Description |
+|---|---|
+| **PipeWeaver target name** | The managed master target, e.g. `Master Channel` |
+| **Speaker device** | The physical output device to use as speaker |
+| **Headphone device** | The physical output device to use as headphones |
 
-Matching is intentionally tolerant:
+The dropdowns are populated automatically when PipeWeaver is running. If PipeWeaver is unreachable when the config is opened, free-text entry fields are shown instead.
 
-- exact node name works
-- description substring matches also work
+The first available option is saved automatically on first open — you can change it afterwards at any time.
+
+Matching is tolerant: exact node names and description substrings both work.
 
 ## Behavior
 
@@ -65,6 +75,8 @@ On press, the plugin:
 3. resolves speaker and headphone targets from the available physical targets
 4. removes existing attached physical devices from the master target
 5. attaches the selected next target via `/api/command`
+
+The button displays the speaker or headphone icon depending on the active target. No text labels are shown.
 
 ## Notes
 
@@ -77,17 +89,16 @@ On press, the plugin:
 Possible future improvements:
 
 - better multi-output handling
-- configurable labels/icons
-- packaged release artifacts for easier install/update
+- configurable icons
 
 ## Development
 
 Useful files in this repository:
 
-- `actions/TargetToggleAction/TargetToggleAction.py` - main plugin logic
-- `manifest.json` - plugin metadata
-- `main.py` - StreamController plugin registration
-- `CHANGELOG.md` - release history
+- `actions/TargetToggleAction/TargetToggleAction.py` — main plugin logic
+- `manifest.json` — plugin metadata
+- `main.py` — StreamController plugin registration
+- `CHANGELOG.md` — release history
 
 ## License
 
