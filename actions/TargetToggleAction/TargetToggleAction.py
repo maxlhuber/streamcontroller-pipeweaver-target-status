@@ -46,13 +46,13 @@ class TargetToggleAction(ActionBase):
 
     def get_config_rows(self):
         master_row = Adw.EntryRow(title="PipeWeaver target name")
-        master_row.set_subtitle("Name des verwalteten PipeWeaver-Targets, z. B. Master Channel")
+        master_row.set_subtitle("Name of the managed PipeWeaver target, e.g. Master Channel")
 
         speaker_row = Adw.EntryRow(title="Speaker device match")
-        speaker_row.set_subtitle("Node-Name oder Teilstring der Beschreibung")
+        speaker_row.set_subtitle("Node name or substring of the device description")
 
         headphone_row = Adw.EntryRow(title="Headphone device match")
-        headphone_row.set_subtitle("Node-Name oder Teilstring der Beschreibung")
+        headphone_row.set_subtitle("Node name or substring of the device description")
 
         settings = self._settings()
         master_row.set_text(settings.get("master_name", ""))
