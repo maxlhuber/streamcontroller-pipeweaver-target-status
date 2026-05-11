@@ -9,7 +9,7 @@ from src.backend.DeckManagement.InputIdentifier import Input
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw
+from gi.repository import Adw, Gtk
 
 
 class TargetToggleAction(ActionBase):
@@ -44,27 +44,119 @@ class TargetToggleAction(ActionBase):
             except Exception as e:
                 self._show_error(e)
 
+    def _make_string_list(self, items: list[str]) -> Gtk.StringList:
+        sl = Gtk.StringList()
+        for item in items:
+            sl.append(item)
+        return sl
+
+    def _combo_index(self, items: list[str], current: str) -> int:
+        """Return index of current value in items, or 0 if not found."""
+        try:
+            return items.index(current)
+        except ValueError:
+            return 0
+
+    def _fetch_device_options(self):
+        """Return (target_names, device_names) from PipeWeaver API, or ([], []) on error."""
+        try:
+            data = self._get_status_data()
+            physical = data["audio"]["profile"]["devices"]["targets"]["physical_devices"]
+            target_names = [
+                dev.get("description", {}).get("name") or dev.get("description", {}).get("id", "")
+                for dev in physical
+                if dev.get("description", {}).get("name") or dev.get("description", {}).get("id")
+            ]
+            raw_devices = data["audio"]["devices"].get("Target", [])
+            device_names = [
+                dev.get("name") or dev.get("description", "")
+                for dev in raw_devices
+                if dev.get("name") or dev.get("description")
+            ]
+            return target_names, device_names
+        except Exception:
+            return [], []
+
     def get_config_rows(self):
-        master_row = Adw.EntryRow(title="PipeWeaver target name")
-        master_row.set_tooltip_text("Name of the managed PipeWeaver target, e.g. Master Channel")
-
-        speaker_row = Adw.EntryRow(title="Speaker device match")
-        speaker_row.set_tooltip_text("Node name or substring of the device description")
-
-        headphone_row = Adw.EntryRow(title="Headphone device match")
-        headphone_row.set_tooltip_text("Node name or substring of the device description")
-
         settings = self._settings()
-        master_row.set_text(settings.get("master_name", ""))
-        speaker_row.set_text(settings.get("speaker_name", ""))
-        headphone_row.set_text(settings.get("headphone_name", ""))
+        current_master = settings.get("master_name", "")
+        current_speaker = settings.get("speaker_name", "")
+        current_headphone = settings.get("headphone_name", "")
 
-        master_row.connect("notify::text", self.on_master_changed)
-        speaker_row.connect("notify::text", self.on_speaker_name_changed)
-        headphone_row.connect("notify::text", self.on_headphone_name_changed)
+        target_names, device_names = self._fetch_device_options()
+
+        # ── PipeWeaver target name ──────────────────────────────────────────
+        if target_names:
+            # Ensure current saved value appears in the list even if API no longer returns it
+            if current_master and current_master not in target_names:
+                target_names.insert(0, current_master)
+            master_row = Adw.ComboRow(title="PipeWeaver target name")
+            master_row.set_tooltip_text("The managed PipeWeaver target (master channel)")
+            master_row.set_model(self._make_string_list(target_names))
+            master_row.set_selected(self._combo_index(target_names, current_master))
+            master_row.connect("notify::selected", self._on_master_combo_changed, target_names)
+        else:
+            master_row = Adw.EntryRow(title="PipeWeaver target name")
+            master_row.set_tooltip_text("Name of the managed PipeWeaver target, e.g. Master Channel")
+            master_row.set_text(current_master)
+            master_row.connect("notify::text", self.on_master_changed)
+
+        # ── Speaker device ──────────────────────────────────────────────────
+        if device_names:
+            if current_speaker and current_speaker not in device_names:
+                device_names_speaker = [current_speaker] + device_names
+            else:
+                device_names_speaker = device_names
+            speaker_row = Adw.ComboRow(title="Speaker device")
+            speaker_row.set_tooltip_text("Node name of the speaker output")
+            speaker_row.set_model(self._make_string_list(device_names_speaker))
+            speaker_row.set_selected(self._combo_index(device_names_speaker, current_speaker))
+            speaker_row.connect("notify::selected", self._on_speaker_combo_changed, device_names_speaker)
+        else:
+            speaker_row = Adw.EntryRow(title="Speaker device match")
+            speaker_row.set_tooltip_text("Node name or substring of the device description")
+            speaker_row.set_text(current_speaker)
+            speaker_row.connect("notify::text", self.on_speaker_name_changed)
+
+        # ── Headphone device ────────────────────────────────────────────────
+        if device_names:
+            if current_headphone and current_headphone not in device_names:
+                device_names_headphone = [current_headphone] + device_names
+            else:
+                device_names_headphone = device_names
+            headphone_row = Adw.ComboRow(title="Headphone device")
+            headphone_row.set_tooltip_text("Node name of the headphone/headset output")
+            headphone_row.set_model(self._make_string_list(device_names_headphone))
+            headphone_row.set_selected(self._combo_index(device_names_headphone, current_headphone))
+            headphone_row.connect("notify::selected", self._on_headphone_combo_changed, device_names_headphone)
+        else:
+            headphone_row = Adw.EntryRow(title="Headphone device match")
+            headphone_row.set_tooltip_text("Node name or substring of the device description")
+            headphone_row.set_text(current_headphone)
+            headphone_row.connect("notify::text", self.on_headphone_name_changed)
 
         return [master_row, speaker_row, headphone_row]
 
+    # ── Combo callbacks ─────────────────────────────────────────────────────
+    def _on_master_combo_changed(self, combo, _, items):
+        idx = combo.get_selected()
+        if 0 <= idx < len(items):
+            self._save_setting("master_name", items[idx])
+            self.refresh_state(force=True)
+
+    def _on_speaker_combo_changed(self, combo, _, items):
+        idx = combo.get_selected()
+        if 0 <= idx < len(items):
+            self._save_setting("speaker_name", items[idx])
+            self.refresh_state(force=True)
+
+    def _on_headphone_combo_changed(self, combo, _, items):
+        idx = combo.get_selected()
+        if 0 <= idx < len(items):
+            self._save_setting("headphone_name", items[idx])
+            self.refresh_state(force=True)
+
+    # ── Entry fallback callbacks ────────────────────────────────────────────
     def on_master_changed(self, row, _):
         self._save_setting("master_name", row.get_text())
         self.refresh_state(force=True)
