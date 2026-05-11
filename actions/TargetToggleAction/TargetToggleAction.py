@@ -54,22 +54,16 @@ class TargetToggleAction(ActionBase):
         headphone_row = Adw.EntryRow(title="Headphone device match")
         headphone_row.set_subtitle("Node-Name oder Teilstring der Beschreibung")
 
-        poll_row = Adw.SpinRow.new_with_range(0.2, 5.0, 0.1)
-        poll_row.set_title("Poll interval hint (unused by app tick)")
-        poll_row.set_subtitle("Nur zur Dokumentation; StreamController ruft on_tick selbst auf")
-
         settings = self._settings()
-        master_row.set_text(settings["master_name"])
-        speaker_row.set_text(settings["speaker_name"])
-        headphone_row.set_text(settings["headphone_name"])
-        poll_row.set_value(settings.get("poll_interval", 1.0))
+        master_row.set_text(settings.get("master_name", ""))
+        speaker_row.set_text(settings.get("speaker_name", ""))
+        headphone_row.set_text(settings.get("headphone_name", ""))
 
         master_row.connect("notify::text", self.on_master_changed)
         speaker_row.connect("notify::text", self.on_speaker_name_changed)
         headphone_row.connect("notify::text", self.on_headphone_name_changed)
-        poll_row.connect("changed", self.on_poll_changed)
 
-        return [master_row, speaker_row, headphone_row, poll_row]
+        return [master_row, speaker_row, headphone_row]
 
     def on_master_changed(self, row, _):
         self._save_setting("master_name", row.get_text())
@@ -82,9 +76,6 @@ class TargetToggleAction(ActionBase):
     def on_headphone_name_changed(self, row, _):
         self._save_setting("headphone_name", row.get_text())
         self.refresh_state(force=True)
-
-    def on_poll_changed(self, row):
-        self._save_setting("poll_interval", round(row.get_value(), 1))
 
     def _save_setting(self, key, value):
         settings = self.get_settings()
