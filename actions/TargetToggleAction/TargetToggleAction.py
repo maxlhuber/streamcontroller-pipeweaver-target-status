@@ -150,8 +150,14 @@ class TargetToggleAction(ActionBase):
         raise RuntimeError(f"Unexpected PipeWeaver response: {result}")
 
     def _master_profile_device(self, data):
-        master_name = self._settings()["master_name"].strip()
-        devices = data["audio"]["profile"]["devices"]["targets"]["physical_devices"]
+        master_name = self._settings().get("master_name", "").strip()
+        try:
+            devices = data["audio"]["profile"]["devices"]["targets"]["physical_devices"]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"Unexpected PipeWeaver API shape — missing key {exc}. "
+                "Check that PipeWeaver is running and the API schema matches."
+            ) from exc
         for dev in devices:
             description = dev.get("description", {})
             if description.get("name") == master_name or description.get("id") == master_name:
@@ -170,7 +176,13 @@ class TargetToggleAction(ActionBase):
         return candidate == needle or needle in candidate
 
     def _find_physical_target(self, data, match_value: str):
-        targets = data["audio"]["devices"]["Target"]
+        try:
+            targets = data["audio"]["devices"]["Target"]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"Unexpected PipeWeaver API shape — missing key {exc}. "
+                "Check that PipeWeaver is running and the API schema matches."
+            ) from exc
         if not match_value:
             return None
 
