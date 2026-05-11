@@ -30,6 +30,7 @@ class TargetToggleAction(ActionBase):
         self.last_error: Optional[str] = None
 
     def on_ready(self):
+        self._init_settings()
         self.refresh_state(force=True)
 
     def on_tick(self):
@@ -90,14 +91,23 @@ class TargetToggleAction(ActionBase):
         settings[key] = value
         self.set_settings(settings)
 
-    def _settings(self):
+    def _init_settings(self):
+        """Write default values once at startup; never called on every tick."""
         settings = self.get_settings()
-        settings.setdefault("master_name", "Master Channel")
-        settings.setdefault("speaker_name", "alsa_output.usb-bestechnic_EDIFIER_M60_20160406.1-00.analog-stereo")
-        settings.setdefault("headphone_name", "xlrdock-sink")
-        settings.setdefault("poll_interval", 1.0)
-        self.set_settings(settings)
-        return settings
+        changed = False
+        for key, default in [
+            ("master_name", ""),
+            ("speaker_name", ""),
+            ("headphone_name", ""),
+        ]:
+            if key not in settings:
+                settings[key] = default
+                changed = True
+        if changed:
+            self.set_settings(settings)
+
+    def _settings(self):
+        return self.get_settings()
 
     def _http_get_json(self, urls):
         last_error = None
