@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import urllib.request
 from typing import Optional, Tuple
 
@@ -58,7 +59,13 @@ class TargetToggleAction(ActionBase):
             return 0
 
     def _fetch_device_options(self):
-        """Return (target_names, device_names) from PipeWeaver API, or ([], []) on error."""
+        """Return (target_names, device_names).
+
+        target_names: PipeWeaver managed target groups (e.g. "Master Channel").
+        device_names: all PipeWire audio sink descriptions via pactl — independent
+                      of whether a sink is currently attached to a PipeWeaver target.
+        """
+        target_names = []
         try:
             data = self._get_status_data()
             physical = data["audio"]["profile"]["devices"]["targets"]["physical_devices"]
@@ -67,15 +74,29 @@ class TargetToggleAction(ActionBase):
                 for dev in physical
                 if dev.get("description", {}).get("name") or dev.get("description", {}).get("id")
             ]
-            raw_devices = data["audio"]["devices"].get("Target", [])
-            device_names = [
-                dev.get("name") or dev.get("description", "")
-                for dev in raw_devices
-                if dev.get("name") or dev.get("description")
-            ]
-            return target_names, device_names
         except Exception:
-            return [], []
+            pass
+
+        device_names = []
+        try:
+            result = subprocess.run(
+                ["pactl", "list", "sinks"],
+                capture_output=True, text=True, timeout=5,
+                env={**os.environ, "LC_ALL": "C", "LANG": "C"},
+            )
+            pending_name = None
+            for line in result.stdout.splitlines():
+                stripped = line.strip()
+                if stripped.startswith("Name:"):
+                    pending_name = stripped.split(":", 1)[1].strip()
+                elif stripped.startswith("Description:") and pending_name is not None:
+                    desc = stripped.split(":", 1)[1].strip()
+                    device_names.append(desc)
+                    pending_name = None
+        except Exception:
+            pass
+
+        return target_names, device_names
 
     def get_config_rows(self):
         settings = self._settings()
@@ -301,7 +322,7 @@ class TargetToggleAction(ActionBase):
         """Return the name of the currently active target using pre-fetched API data."""
         attached = master.get("attached_devices") or []
         if attached:
-            return attached[0].get("name") or attached[0].get("description")
+            return attached[0].get("description") or attached[0].get("name")
 
         default_target = data["audio"].get("defaults", {}).get("Target")
         default_target_id = default_target.get("Unmanaged") if isinstance(default_target, dict) else None
@@ -377,7 +398,8 @@ class TargetToggleAction(ActionBase):
             raise RuntimeError("Master target has no ID")
 
         current = self._get_current_target(data, master)
-        next_target = speaker if current == (headphone.get("name") or headphone.get("description")) else headphone
+        is_on_headphone = self._match_text(current, headphone.get("description") or headphone.get("name") or "")
+        next_target = speaker if is_on_headphone else headphone
         next_target_id = next_target.get("node_id")
         if next_target_id is None:
             raise RuntimeError("Target has no node_id")

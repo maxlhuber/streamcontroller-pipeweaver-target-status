@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning as far as practical for a small plugin.
 
+## [0.2.2] - 2026-05-12
+
+### Fixed
+- Device dropdowns were empty: `PipeWeaver devices.Target` only lists
+  unmanaged sinks; replaced with `pactl list sinks` (with `LC_ALL=C`) so
+  all PipeWire sinks appear regardless of whether they are attached to a
+  PipeWeaver target.
+- Dynamic icon showed question mark after switching to description-based
+  matching: `_get_current_target()` returned node name instead of
+  description. Priority swapped to `description or name`.
+- Toggle was stuck on headphones: comparison used `name or description`
+  (returns node name) but stored value was a description. Fixed by using
+  `_match_text()` (case-insensitive substring) for the headphone check.
+
 ## [0.2.1] - 2026-05-11
 
 ### Added
